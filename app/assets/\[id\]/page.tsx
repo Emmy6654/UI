@@ -1,11 +1,21 @@
 'use client';
 
-import React from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import NavBar from "@/components/agentverse/NavBar";
 import Footer from "@/components/agentverse/Footer";
 import GlassCard from "@/components/agentverse/GlassCard";
+import { fetchAsset } from "@/lib/api";
+import type { AssetDetail } from "@/lib/api";
 
 export default function AssetDetails() {
+  const params = useParams();
+  const [asset, setAsset] = useState<AssetDetail | null>(null);
+
+  useEffect(() => {
+    const id = params?.id as string;
+    if (id) fetchAsset(id).then(setAsset).catch(console.error);
+  }, [params?.id]);
   return (
     <div className="min-h-screen bg-[#050816] overflow-x-hidden">
       <NavBar
@@ -54,19 +64,18 @@ export default function AssetDetails() {
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               <div className="absolute bottom-md left-md">
-                <span className="inline-flex items-center gap-xs px-sm py-1 bg-primary/10 border border-primary/20 backdrop-blur-md rounded-full text-primary font-label-sm text-label-sm mb-sm">
-                  <span className="material-symbols-outlined text-[14px]">
-                    auto_awesome
+                  <span className="inline-flex items-center gap-xs px-sm py-1 bg-primary/10 border border-primary/20 backdrop-blur-md rounded-full text-primary font-label-sm text-label-sm mb-sm">
+                    <span className="material-symbols-outlined text-[14px]">
+                      auto_awesome
+                    </span>
+                    {asset?.type ?? "—"}
                   </span>
-                  Autonomous Research
-                </span>
-                <h1 className="font-headline-lg text-headline-lg text-primary mb-xs">
-                  Aura-7 Research Intel
-                </h1>
-                <p className="text-on-surface-variant max-w-lg">
-                  Advanced autonomous agent specialized in cross-domain market
-                  synthesis and predictive trend modeling.
-                </p>
+                  <h1 className="font-headline-lg text-headline-lg text-primary mb-xs">
+                    {asset?.name ?? "—"}
+                  </h1>
+                  <p className="text-on-surface-variant max-w-lg">
+                    {asset?.description ?? "—"}
+                  </p>
               </div>
             </div>
 
@@ -76,14 +85,14 @@ export default function AssetDetails() {
                 <span className="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">
                   Access Price
                 </span>
-                <div className="flex items-baseline gap-xs">
-                  <span className="font-headline-md text-headline-md text-primary">
-                    15
-                  </span>
-                  <span className="text-on-surface-variant font-body-md">
-                    Credits / Run
-                  </span>
-                </div>
+                  <div className="flex items-baseline gap-xs">
+                    <span className="font-headline-md text-headline-md text-primary">
+                      {asset?.price ?? "—"}
+                    </span>
+                    <span className="text-on-surface-variant font-body-md">
+                      Credits / Run
+                    </span>
+                  </div>
               </div>
               <button className="bg-primary text-background px-xl py-md rounded-xl font-body-lg font-bold hover:opacity-90 active:scale-95 transition-all flex items-center gap-sm">
                 <span
@@ -100,17 +109,15 @@ export default function AssetDetails() {
           {/* Right: Metrics + Creator */}
           <div className="lg:col-span-5 space-y-md">
             <div className="grid grid-cols-2 gap-md">
-              {[
-                { label: "Executions", value: "12.4k+", icon: "bolt" },
-                { label: "Revenue (XLM)", value: "48.2k", icon: "payments" },
-                { label: "Active Users", value: "892", icon: "group" },
-                {
-                  label: "Rating",
-                  value: "4.92",
-                  icon: "star",
-                  filled: true,
-                },
-              ].map((metric) => (
+                {(() => {
+                  const m = asset?.metrics;
+                  const items = [
+                    { label: "Executions", value: m ? `${(m.executions / 1000).toFixed(1)}k+` : "—", icon: "bolt" },
+                    { label: "Revenue (XLM)", value: m ? `${(m.revenue / 1000).toFixed(1)}k` : "—", icon: "payments" },
+                    { label: "Active Users", value: m ? String(m.activeUsers) : "—", icon: "group" },
+                    { label: "Rating", value: m ? m.rating.toFixed(2) : "—", icon: "star", filled: true },
+                  ];
+                  return items.map((metric) => (
                 <GlassCard
                   key={metric.label}
                   className="p-md flex flex-col justify-between h-32 group"
@@ -125,7 +132,8 @@ export default function AssetDetails() {
                     {metric.value}
                   </span>
                 </GlassCard>
-              ))}
+              ));
+            })()}
             </div>
 
             {/* Creator Card */}

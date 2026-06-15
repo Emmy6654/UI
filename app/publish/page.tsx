@@ -48,10 +48,25 @@ const fallbackTypes: AssetType[] = [
 export default function PublishAsset() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [assetTypes, setAssetTypes] = useState<AssetType[]>(fallbackTypes);
+  const [assetName, setAssetName] = useState("");
 
   useEffect(() => {
     fetchAssetTypes().then(setAssetTypes).catch(console.error);
   }, []);
+
+  const handleCreate = async () => {
+    if (!selectedType || !assetName.trim()) {
+      alert("Please select an asset type and enter a name.");
+      return;
+    }
+    try {
+      const result = await createAsset({ name: assetName, type: selectedType });
+      alert(`Asset created: ${result.name}`);
+      window.location.href = `/assets/${result.id}`;
+    } catch (err) {
+      alert("Failed to create asset: " + (err as Error).message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20">
@@ -167,6 +182,8 @@ export default function PublishAsset() {
                   className="w-full bg-[#0A0E1A] border border-outline-variant/30 p-md text-primary focus:outline-none focus:border-primary transition-colors font-body-md rounded"
                   placeholder="e.g. Neural-Sentience-v1"
                   type="text"
+                  value={assetName}
+                  onChange={(e) => setAssetName(e.target.value)}
                 />
               </div>
               <div className="space-y-xs">
@@ -206,8 +223,8 @@ export default function PublishAsset() {
             <span className="text-on-surface-variant font-label-sm text-label-sm opacity-50 hidden sm:block">
               Configuration pending...
             </span>
-            <button className="bg-primary text-on-primary px-lg h-[52px] font-bold text-label-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-md uppercase tracking-widest rounded-sm">
-              NEXT STEP
+            <button onClick={handleCreate} className="bg-primary text-on-primary px-lg h-[52px] font-bold text-label-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-md uppercase tracking-widest rounded-sm">
+              {selectedType && assetName.trim() ? "CREATE ASSET" : "NEXT STEP"}
               <span className="material-symbols-outlined text-sm">
                 arrow_forward
               </span>

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import GlassCard from "@/components/agentverse/GlassCard";
 import NavBar from "@/components/agentverse/NavBar";
 import Footer from "@/components/agentverse/Footer";
-import { fetchWalletBalance, fetchCreditPackages } from "@/lib/api";
-import type { WalletBalance, CreditPackage } from "@/lib/api";
+import { fetchWalletBalance, fetchCreditPackages, fetchWalletTransactions } from "@/lib/api";
+import type { WalletBalance, CreditPackage, WalletTransaction } from "@/lib/api";
 
 const fallbackPackages: CreditPackage[] = [
   { id: "1", name: "Starter", slug: "starter", description: "Perfect for individual developers and testing.", icon: "rocket_launch", credits: 500, price: 50, originalPrice: null, features: ["Standard Execution Speed", "Basic Agent Monitoring"], popular: false },
@@ -13,20 +13,46 @@ const fallbackPackages: CreditPackage[] = [
   { id: "3", name: "Enterprise", slug: "enterprise", description: "Massive scale for high-volume workflows.", icon: "corporate_fare", credits: 10000, price: 800, originalPrice: null, features: ["Ultra-low Latency Node", "Unlimited Agent Deployments", "24/7 Priority Support"], popular: false },
 ];
 
-const transactions = [
+type DisplayTx = {
+  type: string; typeColor: string; description: string; txid: string; date: string; amount: string; amountColor: string;
+};
+
+const fallbackTransactions: DisplayTx[] = [
   { type: "Purchase", typeColor: "bg-error", description: "Marketplace: Data Aggregator V2", txid: "0x82f...e31", date: "Oct 24, 2023", amount: "-120 Credits", amountColor: "text-error" },
   { type: "Income", typeColor: "bg-secondary", description: "Agent Revenue: Neural-Search-Bot", txid: "0x41a...b2c", date: "Oct 23, 2023", amount: "+45.50 Credits", amountColor: "text-secondary" },
   { type: "Fee", typeColor: "bg-outline", description: "Network Maintenance Fee", txid: "0x111...789", date: "Oct 22, 2023", amount: "-0.50 Credits", amountColor: "text-outline-variant" },
   { type: "Refill", typeColor: "bg-primary", description: "Resource Refill: Starter Pack", txid: "0x902...a4e", date: "Oct 20, 2023", amount: "+500 Credits", amountColor: "text-primary" },
 ];
 
+function toDisplayTx(tx: WalletTransaction): DisplayTx {
+  const typeConfig: Record<string, { color: string; icon: string }> = {
+    PURCHASE: { color: "bg-error", icon: "shopping_cart" },
+    INCOME: { color: "bg-secondary", icon: "trending_up" },
+    FEE: { color: "bg-outline", icon: "bolt" },
+    REFILL: { color: "bg-primary", icon: "add_card" },
+  };
+  const cfg = typeConfig[tx.type] ?? { color: "bg-outline", icon: "receipt" };
+  const isPositive = tx.amount >= 0;
+  return {
+    type: tx.type,
+    typeColor: cfg.color,
+    description: tx.description,
+    txid: tx.txid,
+    date: new Date(tx.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    amount: `${isPositive ? "+" : ""}${tx.amount.toLocaleString()} ${tx.currency}`,
+    amountColor: isPositive ? "text-secondary" : "text-error",
+  };
+}
+
 export default function WalletPage() {
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [packages, setPackages] = useState<CreditPackage[]>(fallbackPackages);
+  const [transactions, setTransactions] = useState<DisplayTx[]>(fallbackTransactions);
 
   useEffect(() => {
     fetchWalletBalance().then(setBalance).catch(console.error);
     fetchCreditPackages().then(setPackages).catch(console.error);
+    fetchWalletTransactions().then((apiTxs) => setTransactions(apiTxs.map(toDisplayTx))).catch(console.error);
   }, []);
 
   return (

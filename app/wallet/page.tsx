@@ -4,35 +4,13 @@ import { useState, useEffect } from "react";
 import GlassCard from "@/components/agentverse/GlassCard";
 import NavBar from "@/components/agentverse/NavBar";
 import Footer from "@/components/agentverse/Footer";
-import { fetchWalletBalance } from "@/lib/api";
-import type { WalletBalance } from "@/lib/api";
+import { fetchWalletBalance, fetchCreditPackages } from "@/lib/api";
+import type { WalletBalance, CreditPackage } from "@/lib/api";
 
-const creditPackages = [
-  {
-    name: "Starter",
-    icon: "rocket_launch",
-    credits: "500",
-    price: "50 XLM",
-    features: ["Standard Execution Speed", "Basic Agent Monitoring"],
-    popular: false,
-  },
-  {
-    name: "Pro",
-    icon: "workspace_premium",
-    credits: "2,500",
-    price: "200 XLM",
-    originalPrice: "250 XLM",
-    features: ["Priority Execution", "Advanced Analytics Suite", "API Sandbox Access"],
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    icon: "corporate_fare",
-    credits: "10,000",
-    price: "800 XLM",
-    features: ["Ultra-low Latency Node", "Unlimited Agent Deployments", "24/7 Priority Support"],
-    popular: false,
-  },
+const fallbackPackages: CreditPackage[] = [
+  { id: "1", name: "Starter", slug: "starter", description: "Perfect for individual developers and testing.", icon: "rocket_launch", credits: 500, price: 50, originalPrice: null, features: ["Standard Execution Speed", "Basic Agent Monitoring"], popular: false },
+  { id: "2", name: "Pro", slug: "pro", description: "For growing agents that need consistent power.", icon: "workspace_premium", credits: 2500, price: 200, originalPrice: 250, features: ["Priority Execution", "Advanced Analytics Suite", "API Sandbox Access"], popular: true },
+  { id: "3", name: "Enterprise", slug: "enterprise", description: "Massive scale for high-volume workflows.", icon: "corporate_fare", credits: 10000, price: 800, originalPrice: null, features: ["Ultra-low Latency Node", "Unlimited Agent Deployments", "24/7 Priority Support"], popular: false },
 ];
 
 const transactions = [
@@ -44,9 +22,11 @@ const transactions = [
 
 export default function WalletPage() {
   const [balance, setBalance] = useState<WalletBalance | null>(null);
+  const [packages, setPackages] = useState<CreditPackage[]>(fallbackPackages);
 
   useEffect(() => {
     fetchWalletBalance().then(setBalance).catch(console.error);
+    fetchCreditPackages().then(setPackages).catch(console.error);
   }, []);
 
   return (
@@ -159,7 +139,7 @@ export default function WalletPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-              {creditPackages.map((pkg) => (
+              {packages.map((pkg) => (
                 <div
                   key={pkg.name}
                   className={`glass-card p-lg rounded-xl flex flex-col justify-between transition-all duration-500 group ${
@@ -190,11 +170,7 @@ export default function WalletPage() {
                       {pkg.name}
                     </h3>
                     <p className="text-on-surface-variant font-body-md mb-lg">
-                      {pkg.name === "Starter"
-                        ? "Perfect for individual developers and testing."
-                        : pkg.name === "Pro"
-                          ? "For growing agents that need consistent power."
-                          : "Massive scale for high-volume workflows."}
+                      {pkg.description}
                     </p>
                     <div className="space-y-sm mb-xl">
                       {pkg.features.map((f) => (
@@ -210,7 +186,7 @@ export default function WalletPage() {
                   <div className="space-y-sm">
                     <div className="flex items-baseline gap-xs mb-sm">
                       <span className="font-headline-md text-headline-md text-primary">
-                        {pkg.credits}
+                        {pkg.credits?.toLocaleString() ?? "—"}
                       </span>
                       <span className="text-body-md text-on-surface-variant">Credits</span>
                     </div>
@@ -221,7 +197,7 @@ export default function WalletPage() {
                           : "bg-surface-container hover:bg-primary hover:text-background text-primary"
                       }`}
                     >
-                      Buy for {pkg.price}
+                      Buy for {pkg.price} XLM
                     </button>
                   </div>
                 </div>

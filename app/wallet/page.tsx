@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import GlassCard from "@/components/agentverse/GlassCard";
 import NavBar from "@/components/agentverse/NavBar";
 import Footer from "@/components/agentverse/Footer";
-import { fetchWalletBalance, fetchCreditPackages, fetchWalletTransactions } from "@/lib/api";
+import { fetchWalletBalance, fetchCreditPackages, fetchWalletTransactions, purchasePackage } from "@/lib/api";
 import type { WalletBalance, CreditPackage, WalletTransaction } from "@/lib/api";
 
 const fallbackPackages: CreditPackage[] = [
@@ -54,6 +54,17 @@ export default function WalletPage() {
     fetchCreditPackages().then(setPackages).catch(console.error);
     fetchWalletTransactions().then((apiTxs) => setTransactions(apiTxs.map(toDisplayTx))).catch(console.error);
   }, []);
+
+  const handlePurchase = async (packageId: string) => {
+    try {
+      const result = await purchasePackage(packageId);
+      alert(result.message);
+      fetchWalletBalance().then(setBalance).catch(console.error);
+      fetchWalletTransactions().then((apiTxs) => setTransactions(apiTxs.map(toDisplayTx))).catch(console.error);
+    } catch (err) {
+      alert(`Purchase failed: ${(err as Error).message}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050816]">
@@ -217,6 +228,7 @@ export default function WalletPage() {
                       <span className="text-body-md text-on-surface-variant">Credits</span>
                     </div>
                     <button
+                      onClick={() => handlePurchase(pkg.id)}
                       className={`w-full py-md font-bold transition-all duration-300 rounded-lg active:scale-[0.98] ${
                         pkg.popular
                           ? "bg-primary text-background shadow-[0_0_20px_rgba(255,255,255,0.2)]"

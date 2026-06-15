@@ -210,31 +210,22 @@ export default function AssetDetails() {
               Typical Logic Flow
             </h3>
             <div className="flex flex-col md:flex-row items-center justify-between gap-lg max-w-4xl mx-auto">
-              {[
-                { icon: "input", label: "Input Query", active: true },
-                { icon: "hub", label: "Neural Analysis", active: false },
-                {
-                  icon: "article",
-                  label: "Strategic Intel",
-                  active: true,
-                  filled: true,
-                },
-              ].map((step, i) => (
+              {(asset?.workflow?.length ? asset.workflow : []).map((step, i) => (
                 <React.Fragment key={step.label}>
                   <div
                     className="flex flex-col items-center gap-sm"
                   >
                     <div
                       className={`w-16 h-16 rounded-full border flex items-center justify-center ${
-                        step.filled
+                        step.isFilled
                           ? "bg-primary border-primary"
-                          : step.active
+                          : step.isActive
                             ? "border-primary bg-background"
                             : "border-primary/30 glass-card"
                       }`}
                     >
                       <span
-                        className={`material-symbols-outlined ${step.filled ? "text-background" : "text-primary"}`}
+                        className={`material-symbols-outlined ${step.isFilled ? "text-background" : "text-primary"}`}
                       >
                         {step.icon}
                       </span>
@@ -243,7 +234,7 @@ export default function AssetDetails() {
                       {step.label}
                     </span>
                   </div>
-                  {i < 2 && (
+                  {i < (asset?.workflow?.length ?? 0) - 1 && (
                     <div className="hidden md:block flex-grow h-px bg-outline-variant/30 relative">
                       <div className="absolute -top-1 left-1/2 w-2 h-2 bg-primary rounded-full" />
                     </div>
@@ -275,37 +266,16 @@ export default function AssetDetails() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/20">
-                {[
-                  {
-                    param: "Model Architecture",
-                    value: "Aether-Core-v7.2",
-                    note: "Proprietary logic gate optimization",
-                  },
-                  {
-                    param: "Max Context Window",
-                    value: "128k tokens",
-                    note: "Optimized for long-form synthesis",
-                  },
-                  {
-                    param: "Data Refresh Rate",
-                    value: "Real-time",
-                    note: "Websocket stream integration",
-                  },
-                  {
-                    param: "Output Formats",
-                    value: "XML, JSON, Markdown",
-                    note: "Standardized Aetheric logic schemas",
-                  },
-                ].map((row) => (
+                {(asset?.specs?.length ? asset.specs : []).map((row) => (
                   <tr
-                    key={row.param}
+                    key={row.parameter}
                     className="hover:bg-white/5 transition-colors"
                   >
-                    <td className="p-md font-bold text-primary">{row.param}</td>
+                    <td className="p-md font-bold text-primary">{row.parameter}</td>
                     <td className="p-md font-label-sm text-on-secondary-container">
                       {row.value}
                     </td>
-                    <td className="p-md text-on-surface-variant">{row.note}</td>
+                    <td className="p-md text-on-surface-variant">{row.notes}</td>
                   </tr>
                 ))}
               </tbody>

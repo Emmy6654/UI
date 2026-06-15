@@ -1,8 +1,11 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import GlassCard from "@/components/agentverse/GlassCard";
 import NavBar from "@/components/agentverse/NavBar";
 import Footer from "@/components/agentverse/Footer";
+import { fetchWalletBalance } from "@/lib/api";
+import type { WalletBalance } from "@/lib/api";
 
 const creditPackages = [
   {
@@ -40,6 +43,12 @@ const transactions = [
 ];
 
 export default function WalletPage() {
+  const [balance, setBalance] = useState<WalletBalance | null>(null);
+
+  useEffect(() => {
+    fetchWalletBalance().then(setBalance).catch(console.error);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#050816]">
       <NavBar
@@ -102,16 +111,16 @@ export default function WalletPage() {
                     <span className="text-on-surface-variant font-label-sm">AGENT CREDITS</span>
                   </div>
                   <div className="flex items-baseline gap-sm">
-                    <span className="font-display-xl text-display-xl text-primary">450</span>
+                    <span className="font-display-xl text-display-xl text-primary">{balance?.credits ?? "—"}</span>
                     <span className="text-on-surface-variant font-headline-md font-normal">Credits Available</span>
                   </div>
                   <div className="mt-lg flex gap-md">
                     <div className="h-1 bg-primary/20 flex-grow rounded-full overflow-hidden">
-                      <div className="h-full bg-primary w-2/3 shadow-[0_0_10px_rgba(255,255,255,0.5)] rounded-full" />
+                      <div className="h-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)] rounded-full" style={{ width: `${balance?.usagePercent ?? 0}%` }} />
                     </div>
                   </div>
                   <p className="mt-sm text-on-surface-variant font-label-sm">
-                    Usage: 67% of monthly allocation used.
+                    {balance ? `Usage: ${balance.usagePercent}% of monthly allocation used.` : "—"}
                   </p>
                 </div>
               </GlassCard>
@@ -125,9 +134,9 @@ export default function WalletPage() {
                     </span>
                     <span className="text-on-surface-variant font-label-sm uppercase">Stellar XLM</span>
                   </div>
-                  <p className="font-headline-lg text-headline-lg text-secondary">1,240.45</p>
+                  <p className="font-headline-lg text-headline-lg text-secondary">{balance?.xlmBalance?.toLocaleString() ?? "—"}</p>
                   <p className="text-on-tertiary-container font-label-sm mt-xs">
-                    ≈ $138.92 USD
+                    ≈ ${balance?.xlmUsdEstimate?.toFixed(2) ?? "—"} USD
                   </p>
                 </div>
                 <button className="mt-lg border border-outline-variant hover:border-primary text-primary py-base px-md rounded-lg font-label-sm transition-all duration-300 text-center active:scale-[0.98]">
